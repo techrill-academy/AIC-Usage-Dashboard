@@ -71,6 +71,15 @@ header code { background: var(--panel-2); padding: 1px 6px; border-radius: 4px; 
 }
 .actions { display: flex; align-items: center; gap: 14px; margin-top: 4px; }
 .note { color: var(--muted); font-size: 12px; }
+.date-error {
+  margin: 4px 0 10px;
+  padding: 8px 12px;
+  background: rgba(248, 81, 73, 0.1);
+  border: 1px solid rgba(248, 81, 73, 0.35);
+  color: var(--err);
+  border-radius: 6px;
+  font-size: 13px;
+}
 
 button {
   background: var(--accent);
@@ -203,3 +212,76 @@ table.dataTable tbody tr:hover {
   .card { margin: 16px; }
   header { padding: 20px 16px 0; }
 }
+
+/* Drill-down modal */
+.drill-modal {
+  width: min(1200px, 95vw);
+  max-width: 95vw;
+  max-height: 92vh;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+}
+.drill-modal::backdrop {
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(2px);
+}
+.drill-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.drill-modal-header h2 {
+  margin: 0;
+  font-size: 18px;
+}
+.drill-modal-body {
+  padding: 16px 8px 24px;
+  overflow-y: auto;
+  max-height: calc(92vh - 70px);
+}
+.drill-modal-body .card {
+  margin: 16px 16px;
+}
+.drill-modal-body .summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 14px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  margin: 16px;
+}
+.close-btn {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+.close-btn:hover { background: var(--panel-2); color: var(--text); }
+.csv-btn {
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
+.csv-btn:hover { filter: brightness(1.1); }

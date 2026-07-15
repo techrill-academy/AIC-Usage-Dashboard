@@ -27,14 +27,15 @@
       </div>
       <div class="row">
         <label>
-          Start date
-          <input type="date" id="startDate" required />
+          Start date <span class="hint">(May 1, 2026 – today)</span>
+          <input type="date" id="startDate" required min="2026-05-01" />
         </label>
         <label>
-          End date <span class="hint">(optional — defaults to today)</span>
-          <input type="date" id="endDate" />
+          End date <span class="hint">(optional — after start date, up to today)</span>
+          <input type="date" id="endDate" min="2026-05-02" />
         </label>
       </div>
+      <div id="date-error" class="date-error hidden"></div>
       <div class="actions">
         <button type="submit" id="run-btn">Generate Dashboard</button>
         <span class="note">Your PAT is sent to the local server only and used to call GitHub on your behalf.</span>
@@ -64,8 +65,8 @@
         <canvas id="chart-timeline"></canvas>
       </div>
       <div class="card chart-card">
-        <h3>Top SKUs / products</h3>
-        <canvas id="chart-sku"></canvas>
+        <h3>Top models <span class="hint">— click a bar to drill down</span></h3>
+        <canvas id="chart-model"></canvas>
       </div>
       <div class="card chart-card">
         <h3>By organization</h3>
@@ -79,31 +80,37 @@
 
     <div class="card" id="users-card">
       <div class="table-controls">
-        <h3>AI credit consumption by user <span class="hint">— click a username to drill down</span></h3>
+        <h3>AI credit consumption by user <span class="hint">— click a username or any chart bar/slice to drill down</span></h3>
         <button id="download-csv" type="button">Download raw CSV</button>
       </div>
       <div class="table-wrap">
         <table id="users-table" class="display" style="width:100%"></table>
       </div>
     </div>
+  </section>
 
-    <div class="card hidden" id="drill-card">
-      <div class="table-controls">
-        <h3>Drill-down: <span id="drill-user">—</span></h3>
-        <button id="drill-back" type="button">← Back to all users</button>
+  <dialog id="drill-modal" class="drill-modal">
+    <div class="drill-modal-header">
+      <div>
+        <h2 id="drill-modal-title">Drill-down</h2>
+        <p id="drill-modal-meta" class="hint" style="margin:2px 0 0;"></p>
       </div>
-
-      <h4 class="section-title">Daily consumption</h4>
-      <div class="table-wrap">
-        <table id="daily-table" class="display" style="width:100%"></table>
-      </div>
-
-      <h4 class="section-title">By model / SKU</h4>
-      <div class="table-wrap">
-        <table id="model-table" class="display" style="width:100%"></table>
+      <button type="button" id="drill-close" class="close-btn" aria-label="Close">✕</button>
+    </div>
+    <div class="drill-modal-body">
+      <div class="summary" id="drill-stats"></div>
+      <div id="drill-agg"></div>
+      <div class="card">
+        <div class="table-controls">
+          <h3>Raw records <span class="hint">(filtered to this selection)</span></h3>
+          <button class="csv-btn" data-target="drill-raw" type="button">Download CSV</button>
+        </div>
+        <div class="table-wrap">
+          <table id="drill-raw" class="display" style="width:100%"></table>
+        </div>
       </div>
     </div>
-  </section>
+  </dialog>
 
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>

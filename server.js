@@ -8,7 +8,7 @@ const crypto = require('crypto');
 
 const app = express();
 app.use(express.json({ limit: '2mb' }));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(__dirname));
 
 const GITHUB_API = 'https://api.github.com';
 const API_VERSION = '2026-03-10';
