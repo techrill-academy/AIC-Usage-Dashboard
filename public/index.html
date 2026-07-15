@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI Credit Usage Dashboard</title>
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <h1>⚡ GitHub AI Credit Usage Dashboard</h1>
+    <p class="sub">Pulls an <code>ai_credit</code> usage report export from the Enterprise Billing API and visualizes it.</p>
+  </header>
+
+  <section id="form-section" class="card">
+    <form id="report-form">
+      <div class="row">
+        <label>
+          Enterprise slug
+          <input type="text" id="enterprise" placeholder="my-enterprise" required autocomplete="off" />
+        </label>
+        <label>
+          Personal Access Token (PAT)
+          <input type="password" id="pat" placeholder="ghp_… (requires enterprise billing scope)" required autocomplete="off" />
+        </label>
+      </div>
+      <div class="row">
+        <label>
+          Start date
+          <input type="date" id="startDate" required />
+        </label>
+        <label>
+          End date <span class="hint">(optional — defaults to today)</span>
+          <input type="date" id="endDate" />
+        </label>
+      </div>
+      <div class="actions">
+        <button type="submit" id="run-btn">Generate Dashboard</button>
+        <span class="note">Your PAT is sent to the local server only and used to call GitHub on your behalf.</span>
+      </div>
+    </form>
+  </section>
+
+  <section id="progress-section" class="card hidden">
+    <h2>Cooking up your report… 👨‍🍳</h2>
+    <div class="progress-bar"><div id="progress-fill"></div></div>
+    <p id="progress-message" class="progress-message">Starting…</p>
+    <ul id="progress-log" class="progress-log"></ul>
+  </section>
+
+  <section id="dashboard-section" class="hidden">
+    <div class="card summary">
+      <div class="stat"><div class="stat-label">Total rows</div><div id="stat-rows" class="stat-value">–</div></div>
+      <div class="stat"><div class="stat-label">Total quantity</div><div id="stat-qty" class="stat-value">–</div></div>
+      <div class="stat"><div class="stat-label">Total gross</div><div id="stat-gross" class="stat-value">–</div></div>
+      <div class="stat"><div class="stat-label">Total net</div><div id="stat-net" class="stat-value">–</div></div>
+      <div class="stat"><div class="stat-label">Date range</div><div id="stat-range" class="stat-value">–</div></div>
+    </div>
+
+    <div class="charts-grid">
+      <div class="card chart-card">
+        <h3>Usage over time</h3>
+        <canvas id="chart-timeline"></canvas>
+      </div>
+      <div class="card chart-card">
+        <h3>Top SKUs / products</h3>
+        <canvas id="chart-sku"></canvas>
+      </div>
+      <div class="card chart-card">
+        <h3>By organization</h3>
+        <canvas id="chart-org"></canvas>
+      </div>
+      <div class="card chart-card">
+        <h3>Top users</h3>
+        <canvas id="chart-user"></canvas>
+      </div>
+    </div>
+
+    <div class="card" id="users-card">
+      <div class="table-controls">
+        <h3>AI credit consumption by user <span class="hint">— click a username to drill down</span></h3>
+        <button id="download-csv" type="button">Download raw CSV</button>
+      </div>
+      <div class="table-wrap">
+        <table id="users-table" class="display" style="width:100%"></table>
+      </div>
+    </div>
+
+    <div class="card hidden" id="drill-card">
+      <div class="table-controls">
+        <h3>Drill-down: <span id="drill-user">—</span></h3>
+        <button id="drill-back" type="button">← Back to all users</button>
+      </div>
+
+      <h4 class="section-title">Daily consumption</h4>
+      <div class="table-wrap">
+        <table id="daily-table" class="display" style="width:100%"></table>
+      </div>
+
+      <h4 class="section-title">By model / SKU</h4>
+      <div class="table-wrap">
+        <table id="model-table" class="display" style="width:100%"></table>
+      </div>
+    </div>
+  </section>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
