@@ -89,6 +89,109 @@
     </div>
   </section>
 
+  <section id="orgs-section">
+    <header>
+      <h2>🏢 Enterprise Organizations</h2>
+      <p class="sub">Lists all organizations under a GitHub Enterprise account.</p>
+    </header>
+
+    <div class="card">
+      <form id="orgs-form">
+        <div class="row">
+          <label>
+            Enterprise slug
+            <input type="text" id="orgs-enterprise" placeholder="my-enterprise" required autocomplete="off" />
+          </label>
+          <label>
+            Personal Access Token (PAT)
+            <input type="password" id="orgs-pat" placeholder="ghp_… (requires enterprise read scope)" required autocomplete="off" />
+          </label>
+        </div>
+        <div class="actions">
+          <button type="submit" id="orgs-run-btn">Fetch Organizations</button>
+          <span class="note">Your PAT is sent to the local server only and used to call GitHub on your behalf.</span>
+        </div>
+      </form>
+      <div id="orgs-error" class="date-error hidden"></div>
+    </div>
+
+    <div id="orgs-results" class="hidden">
+      <div class="card summary">
+        <div class="stat"><div class="stat-label">Total organizations</div><div id="orgs-stat-total" class="stat-value">–</div></div>
+      </div>
+      <div class="card" id="orgs-table-card">
+        <div class="table-controls">
+          <h3>Organizations</h3>
+          <button id="orgs-download-csv" type="button">Download CSV</button>
+        </div>
+        <div class="table-wrap">
+          <table id="orgs-table" class="display" style="width:100%"></table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="seats-section">
+    <header>
+      <h2>🪑 Copilot Seat Management &amp; Activity</h2>
+      <p class="sub">Pulls organization seat data from the Copilot Billing API and evaluates activity status.</p>
+    </header>
+
+    <div class="card">
+      <form id="seats-form">
+        <div class="row">
+          <label>
+            Organization
+            <div id="seats-org-manual-wrap">
+              <input type="text" id="seats-org" placeholder="my-org" autocomplete="off" />
+              <span class="hint seats-org-hint">Fetch Enterprise Organizations above to enable multi-org selection.</span>
+            </div>
+            <div id="seats-org-select-wrap" class="hidden">
+              <input type="search" id="seats-org-search" placeholder="Filter organizations…" autocomplete="off" />
+              <div class="seats-org-select-actions">
+                <button type="button" id="seats-select-all-btn" class="seats-org-action-btn">Select All</button>
+                <button type="button" id="seats-deselect-all-btn" class="seats-org-action-btn">Deselect All</button>
+                <span id="seats-org-match-count" class="seats-org-match-count"></span>
+              </div>
+              <select multiple id="seats-org-select"></select>
+            </div>
+          </label>
+          <label>
+            Personal Access Token (PAT)
+            <input type="password" id="seats-pat" placeholder="ghp_… (requires manage_billing:copilot or read:org)" required autocomplete="off" />
+          </label>
+          <label>
+            Activity window (days)
+            <input type="number" id="seats-window" min="1" value="30" />
+          </label>
+        </div>
+        <div class="actions">
+          <button type="submit" id="seats-run-btn">Fetch Seats</button>
+          <span class="note">Your PAT is sent to the local server only and used to call GitHub on your behalf.</span>
+        </div>
+      </form>
+      <div id="seats-error" class="date-error hidden"></div>
+    </div>
+
+    <div id="seats-results" class="hidden">
+      <div class="card summary">
+        <div class="stat"><div class="stat-label">Total seats</div><div id="seats-stat-total" class="stat-value">–</div></div>
+        <div class="stat"><div class="stat-label">Active seats</div><div id="seats-stat-active" class="stat-value">–</div></div>
+        <div class="stat"><div class="stat-label">Inactive seats</div><div id="seats-stat-inactive" class="stat-value">–</div></div>
+        <div class="stat"><div class="stat-label">Pending cancellation</div><div id="seats-stat-pending" class="stat-value">–</div></div>
+      </div>
+      <div class="card" id="seats-table-card">
+        <div class="table-controls">
+          <h3>Seat assignments <span class="hint">— active within last <span id="seats-window-label">30</span> days</span></h3>
+          <button id="seats-download-csv" type="button">Download CSV</button>
+        </div>
+        <div class="table-wrap">
+          <table id="seats-table" class="display" style="width:100%"></table>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <dialog id="drill-modal" class="drill-modal">
     <div class="drill-modal-header">
       <div>

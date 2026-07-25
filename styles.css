@@ -25,7 +25,7 @@ body {
 header {
   padding: 32px 40px 8px;
 }
-header h1 { margin: 0 0 4px; font-size: 24px; }
+header h1, header h2 { margin: 0 0 4px; font-size: 24px; }
 header .sub { margin: 0; color: var(--muted); font-size: 14px; }
 header code { background: var(--panel-2); padding: 1px 6px; border-radius: 4px; }
 
@@ -47,7 +47,21 @@ header code { background: var(--panel-2); padding: 1px 6px; border-radius: 4px; 
   gap: 16px;
   margin-bottom: 14px;
 }
-#report-form label {
+#seats-form .row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 140px;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+#orgs-form .row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+#report-form label,
+#seats-form label,
+#orgs-form label {
   display: flex;
   flex-direction: column;
   font-size: 13px;
@@ -55,7 +69,9 @@ header code { background: var(--panel-2); padding: 1px 6px; border-radius: 4px; 
   gap: 6px;
 }
 #report-form .hint { color: var(--muted); font-weight: normal; }
-#report-form input {
+#report-form input,
+#seats-form input,
+#orgs-form input {
   background: var(--panel-2);
   border: 1px solid var(--border);
   color: var(--text);
@@ -64,7 +80,9 @@ header code { background: var(--panel-2); padding: 1px 6px; border-radius: 4px; 
   font-size: 14px;
   color-scheme: dark;
 }
-#report-form input:focus {
+#report-form input:focus,
+#seats-form input:focus,
+#orgs-form input:focus {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(47,129,247,0.25);
@@ -135,6 +153,83 @@ button:disabled { opacity: 0.6; cursor: not-allowed; }
 .stat { text-align: center; }
 .stat-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
 .stat-value { font-size: 22px; font-weight: 700; margin-top: 4px; }
+
+#seats-results .summary { grid-template-columns: repeat(4, 1fr); }
+
+.seat-status {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.seat-status.seat-active { background: rgba(63, 185, 80, 0.15); color: #3fb950; }
+.seat-status.seat-inactive { background: rgba(248, 81, 73, 0.15); color: var(--err); }
+
+#orgs-results .summary { grid-template-columns: repeat(1, 1fr); max-width: 220px; }
+#seats-org-search {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 6px;
+  font-size: 13px;
+  width: 100%;
+  padding: 7px 10px;
+  margin-bottom: 6px;
+}
+#seats-org-search:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(47,129,247,0.25);
+}
+#seats-org-search::placeholder { color: var(--muted); }
+.seats-org-match-count {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+#seats-org-select {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 6px;
+  font-size: 14px;
+  width: 100%;
+  min-height: 110px;
+  padding: 4px;
+}
+#seats-org-select option {
+  padding: 5px 8px;
+  border-radius: 4px;
+}
+#seats-org-select option:checked {
+  background: var(--accent);
+}
+.seats-org-select-actions {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.seats-org-action-btn {
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--panel-2);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  cursor: pointer;
+}
+.seats-org-action-btn:hover { background: var(--panel); color: var(--text); }
+.seats-org-hint {
+  display: block;
+  margin-top: 5px;
+  font-size: 11px;
+  color: var(--muted);
+  font-style: italic;
+}
+.org-avatar { width: 18px; height: 18px; border-radius: 4px; vertical-align: middle; margin-right: 4px; }
 
 .charts-grid {
   display: grid;
@@ -208,7 +303,8 @@ table.dataTable tbody tr:hover {
 @media (max-width: 900px) {
   .charts-grid { grid-template-columns: 1fr; }
   .summary { grid-template-columns: repeat(2, 1fr); }
-  #report-form .row { grid-template-columns: 1fr; }
+  #report-form .row,
+  #orgs-form .row { grid-template-columns: 1fr; }
   .card { margin: 16px; }
   header { padding: 20px 16px 0; }
 }

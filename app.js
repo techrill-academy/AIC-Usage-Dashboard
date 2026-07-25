@@ -664,4 +664,297 @@
   }
 
   function renderTable_UNUSED() { /* replaced by renderUsersTable + drill-down */ }
+
+  // --- Enterprise Organizations ---
+  let orgsTable = null;
+  let currentOrgsData = null;
+  const orgsForm = document.getElementById('orgs-form');
+  const orgsRunBtn = document.getElementById('orgs-run-btn');
+  const orgsError = document.getElementById('orgs-error');
+  const orgsResults = document.getElementById('orgs-results');
+
+  document.getElementById('orgs-download-csv').addEventListener('click', () => {
+    if (!currentOrgsData) return;
+    const cols = ['login', 'description', 'url'];
+    const headers = ['Organization', 'Description', 'URL'];
+    const escape = (v) => {
+      const s = v == null ? '' : String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const csv = [headers.join(',')]
+      .concat((currentOrgsData.organizations || []).map(o => cols.map(c => escape(o[c])).join(',')))
+      .join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `enterprise-organizations-${Date.now()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  orgsForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    orgsError.classList.add('hidden');
+    orgsError.textContent = '';
+    orgsRunBtn.disabled = true;
+
+    const payload = {
+      enterprise: document.getElementById('orgs-enterprise').value.trim(),
+      pat: document.getElementById('orgs-pat').value.trim()
+    };
+
+    try {
+      const res = await fetch('/api/enterprise-organizations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const info = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(info.error || `Failed to fetch organizations (${res.status})`);
+      }
+      renderOrgs(info);
+    } catch (err) {
+      orgsError.textContent = err.message;
+      orgsError.classList.remove('hidden');
+      orgsResults.classList.add('hidden');
+    } finally {
+      orgsRunBtn.disabled = false;
+    }
+  });
+
+  let seatsOrgList = []; // all orgs; used to rebuild filtered options
+
+  function buildSeatsOrgOptions(query) {
+    const select = document.getElementById('seats-org-select');
+    const q = (query || '').toLowerCase().trim();
+    // Preserve selected state across rebuilds
+    const selected = new Set(Array.from(select.options).filter(o => o.selected).map(o => o.value));
+    select.innerHTML = '';
+    const filtered = q
+      ? seatsOrgList.filter(o => o.login.toLowerCase().includes(q) || (o.name || '').toLowerCase().includes(q))
+      : seatsOrgList;
+    filtered.forEach(o => {
+      const opt = document.createElement('option');
+      opt.value = o.login;
+      opt.textContent = o.login + (o.name ? ` — ${o.name}` : '');
+      if (selected.has(o.login)) opt.selected = true;
+      select.appendChild(opt);
+    });
+    const countEl = document.getElementById('seats-org-match-count');
+    if (countEl) {
+      countEl.textContent = q ? `${filtered.length} of ${seatsOrgList.length}` : `${seatsOrgList.length} orgs`;
+    }
+  }
+
+  function populateSeatsOrgSelect(organizations) {
+    const selectWrap = document.getElementById('seats-org-select-wrap');
+    const manualWrap = document.getElementById('seats-org-manual-wrap');
+    if (!organizations || !organizations.length) return;
+    seatsOrgList = organizations;
+    const searchInput = document.getElementById('seats-org-search');
+    if (searchInput) searchInput.value = '';
+    buildSeatsOrgOptions('');
+    selectWrap.classList.remove('hidden');
+    manualWrap.classList.add('hidden');
+  }
+
+  function renderOrgs(data) {
+    currentOrgsData = data;
+    orgsResults.classList.remove('hidden');
+    const organizations = data.organizations || [];
+    document.getElementById('orgs-stat-total').textContent = organizations.length.toLocaleString();
+    populateSeatsOrgSelect(organizations);
+
+    const $t = jQuery('#orgs-table');
+    if (orgsTable) {
+      orgsTable.destroy();
+      $t.empty();
+    }
+
+    const rows = organizations.map(o => [
+      o.avatar_url
+        ? `<img src="${escapeHtml(o.avatar_url)}" alt="" class="org-avatar" /> ${escapeHtml(o.login)}`
+        : escapeHtml(o.login),
+      escapeHtml(o.description || '—'),
+      o.html_url || o.url
+        ? `<a href="${escapeHtml(o.html_url || o.url)}" target="_blank" rel="noopener">View</a>`
+        : '—'
+    ]);
+
+    orgsTable = $t.DataTable({
+      data: rows,
+      columns: [
+        { title: 'Organization' },
+        { title: 'Description' },
+        { title: 'Link' }
+      ],
+      pageLength: 25,
+      lengthMenu: [10, 25, 50, 100, 250],
+      order: [[0, 'asc']]
+    });
+  }
+
+  // --- Copilot Seat Management & Activity ---
+  let seatsTable = null;
+  let currentSeatsData = null;
+  const seatsForm = document.getElementById('seats-form');
+  const seatsRunBtn = document.getElementById('seats-run-btn');
+  const seatsError = document.getElementById('seats-error');
+  const seatsResults = document.getElementById('seats-results');
+
+  document.getElementById('seats-org-search').addEventListener('input', function () {
+    buildSeatsOrgOptions(this.value);
+  });
+
+  document.getElementById('seats-select-all-btn').addEventListener('click', () => {
+    const select = document.getElementById('seats-org-select');
+    Array.from(select.options).forEach(o => { o.selected = true; });
+  });
+
+  document.getElementById('seats-deselect-all-btn').addEventListener('click', () => {
+    const select = document.getElementById('seats-org-select');
+    Array.from(select.options).forEach(o => { o.selected = false; });
+  });
+
+  document.getElementById('seats-download-csv').addEventListener('click', () => {
+    if (!currentSeatsData) return;
+    const multiOrg = !!currentSeatsData.multiOrg;
+    const cols = [
+      ...(multiOrg ? ['org'] : []),
+      'login', 'team', 'status', 'lastActivityAt', 'lastActivityEditor', 'pendingCancellationDate', 'createdAt'
+    ];
+    const headers = [
+      ...(multiOrg ? ['Organization'] : []),
+      'User', 'Team', 'Status', 'Last activity', 'Last editor', 'Pending cancellation', 'Created'
+    ];
+    const escape = (v) => {
+      const s = v == null ? '' : String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const csv = [headers.join(',')]
+      .concat((currentSeatsData.seats || []).map(s => cols.map(c => escape(s[c])).join(',')))
+      .join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `copilot-seats-${Date.now()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  seatsForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    seatsError.classList.add('hidden');
+    seatsError.textContent = '';
+    seatsRunBtn.disabled = true;
+
+    const selectWrap = document.getElementById('seats-org-select-wrap');
+    const select = document.getElementById('seats-org-select');
+
+    let orgs;
+    if (!selectWrap.classList.contains('hidden')) {
+      // Multi-select mode — populated from Enterprise Organizations
+      orgs = Array.from(select.selectedOptions).map(o => o.value);
+      if (!orgs.length) {
+        seatsError.textContent = 'Please select at least one organization.';
+        seatsError.classList.remove('hidden');
+        seatsRunBtn.disabled = false;
+        return;
+      }
+    } else {
+      // Manual input fallback
+      const orgInput = document.getElementById('seats-org').value.trim();
+      if (!orgInput) {
+        seatsError.textContent = 'Organization is required.';
+        seatsError.classList.remove('hidden');
+        seatsRunBtn.disabled = false;
+        return;
+      }
+      orgs = [orgInput];
+    }
+
+    const activityWindowDays = Number(document.getElementById('seats-window').value) || 30;
+    document.getElementById('seats-window-label').textContent = activityWindowDays;
+
+    const payload = {
+      orgs,
+      pat: document.getElementById('seats-pat').value.trim(),
+      activityWindowDays
+    };
+
+    try {
+      const res = await fetch('/api/seats', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const info = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(info.error || `Failed to fetch seats (${res.status})`);
+      }
+      renderSeats(info);
+    } catch (err) {
+      seatsError.textContent = err.message;
+      seatsError.classList.remove('hidden');
+      seatsResults.classList.add('hidden');
+    } finally {
+      seatsRunBtn.disabled = false;
+    }
+  });
+
+  function renderSeats(data) {
+    currentSeatsData = data;
+    seatsResults.classList.remove('hidden');
+    document.getElementById('seats-stat-total').textContent = data.totalSeats.toLocaleString();
+    document.getElementById('seats-stat-active').textContent = data.activeSeats.toLocaleString();
+    document.getElementById('seats-stat-inactive').textContent = data.inactiveSeats.toLocaleString();
+    document.getElementById('seats-stat-pending').textContent = data.pendingCancellationSeats.toLocaleString();
+
+    const $t = jQuery('#seats-table');
+    if (seatsTable) {
+      seatsTable.destroy();
+      $t.empty();
+    }
+
+    const multiOrg = !!data.multiOrg;
+
+    const rows = (data.seats || []).map(s => {
+      const row = [];
+      if (multiOrg) row.push(escapeHtml(s.org || '—'));
+      row.push(
+        escapeHtml(s.login),
+        escapeHtml(s.team || '—'),
+        s.status === 'active'
+          ? '<span class="seat-status seat-active">Active</span>'
+          : '<span class="seat-status seat-inactive">Inactive</span>',
+        s.lastActivityAt ? new Date(s.lastActivityAt).toLocaleString() : 'Never',
+        escapeHtml(s.lastActivityEditor || '—'),
+        s.pendingCancellationDate ? new Date(s.pendingCancellationDate).toLocaleDateString() : '—',
+        s.createdAt ? new Date(s.createdAt).toLocaleDateString() : '—'
+      );
+      return row;
+    });
+
+    const columns = [
+      ...(multiOrg ? [{ title: 'Organization' }] : []),
+      { title: 'User' },
+      { title: 'Team' },
+      { title: 'Status' },
+      { title: 'Last activity' },
+      { title: 'Last editor' },
+      { title: 'Pending cancellation' },
+      { title: 'Created' }
+    ];
+
+    seatsTable = $t.DataTable({
+      data: rows,
+      columns,
+      pageLength: 25,
+      lengthMenu: [10, 25, 50, 100, 250],
+      order: [[multiOrg ? 3 : 2, 'asc']]
+    });
+  }
 })();
